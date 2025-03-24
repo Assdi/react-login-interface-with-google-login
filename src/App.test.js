@@ -1,8 +1,13 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+describe('App Component', () => {
+  test('renders without crashing', () => {
+    const { container } = render(<App />);
+    // Check for the Sign In heading which is part of the SignIn component
+    expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
+    // Check if the container div exists
+    expect(container.getElementsByClassName('App')).toHaveLength(1);
+  });
 });

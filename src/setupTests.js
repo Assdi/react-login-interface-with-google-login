@@ -1,5 +1,10 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
-// expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+
+// Mock web-vitals module
+jest.mock('web-vitals', () => ({
+  getCLS: (fn) => fn({ id: 'CLS', value: 0 }),
+  getFID: (fn) => fn({ id: 'FID', value: 0 }),
+  getFCP: (fn) => fn({ id: 'FCP', value: 0 }),
+  getLCP: (fn) => fn({ id: 'LCP', value: 0 }),
+  getTTFB: (fn) => fn({ id: 'TTFB', value: 0 })
+}));
