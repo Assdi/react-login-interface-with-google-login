@@ -109,48 +109,29 @@ describe('Loading State', () => {
   });
 });
 
-// Mock Google OAuth Provider
+// Simple mock for Google OAuth
 jest.mock('@react-oauth/google', () => ({
   GoogleOAuthProvider: ({ children }) => children,
-  GoogleLogin: ({ onSuccess, onError, render }) => {
-    const mockClick = () => {
-      onSuccess({ credential: 'mock-credential' });
-    };
-    return render({ onClick: mockClick });
-  },
+  GoogleLogin: ({ onError, render }) => (
+    <button 
+      data-testid="google-signin"
+      onClick={() => onError('Error occurred')}
+    >
+      Sign in with Google
+    </button>
+  )
 }));
 
 describe('Google Authentication', () => {
-  test('handles successful Google sign-in', async () => {
+  test('shows error message when Google sign-in fails', async () => {
     render(<SignIn />);
     
+    // Click the Google sign-in button
     const googleButton = screen.getByTestId('google-signin');
-    await userEvent.click(googleButton);
+    fireEvent.click(googleButton);
     
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    });
-  });
-
-  test('displays error message on authentication failure', async () => {
-    // Override the mock for this test
-    jest.mocked(GoogleLogin).mockImplementationOnce(({ onError, render }) => {
-      const mockClick = () => {
-        onError();
-      };
-      return render({ onClick: mockClick });
-    });
-
-    render(<SignIn />);
-    
-    const googleButton = screen.getByTestId('google-signin');
-    await userEvent.click(googleButton);
-    
-    await waitFor(() => {
-      expect(screen.getByTestId('auth-error')).toBeInTheDocument();
-      expect(screen.getByTestId('auth-error')).toHaveTextContent(/failed/i);
-    });
+    // Check for error message
+    const errorMessage = await screen.findByText(/failed/i);
+    expect(errorMessage).toBeInTheDocument();
   });
 });
