@@ -7,8 +7,8 @@ describe('SignIn Component', () => {
   test('renders sign in form elements', () => {
     render(<SignIn />);
     
-    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /email address/i })).toBeInTheDocument();
+    expect(screen.getByTestId('password-input')).toBeInTheDocument();
     expect(screen.getByTestId('signin-submit')).toBeInTheDocument();
     expect(screen.getByTestId('google-signin')).toBeInTheDocument();
   });
@@ -66,5 +66,45 @@ describe('SignIn Component', () => {
       expect(emailError).toBeInTheDocument();
       expect(passwordError).toBeInTheDocument();
     });
+  });
+});
+
+describe('Password Visibility Toggle', () => {
+  test('toggles password visibility', async () => {
+    render(<SignIn />);
+    
+    const passwordInput = screen.getByTestId('password-input').querySelector('input');
+    const toggleButton = screen.getByTestId('password-visibility-toggle');
+    
+    expect(passwordInput.type).toBe('password');
+    
+    await userEvent.click(toggleButton);
+    expect(passwordInput.type).toBe('text');
+    
+    await userEvent.click(toggleButton);
+    expect(passwordInput.type).toBe('password');
+  });
+});
+
+describe('Loading State', () => {
+  test('shows loading state during form submission', async () => {
+    render(<SignIn />);
+    
+    const submitButton = screen.getByTestId('signin-submit');
+    const emailInput = screen.getByTestId('email-input').querySelector('input');
+    const passwordInput = screen.getByTestId('password-input').querySelector('input');
+    
+    await userEvent.type(emailInput, 'test@example.com');
+    await userEvent.type(passwordInput, 'Password123');
+    
+    await userEvent.click(submitButton);
+    
+    expect(submitButton).toBeDisabled();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(submitButton).not.toBeDisabled();
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
   });
 });
