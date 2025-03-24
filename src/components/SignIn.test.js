@@ -108,3 +108,49 @@ describe('Loading State', () => {
     }, { timeout: 3000 });
   });
 });
+
+// Mock Google OAuth Provider
+jest.mock('@react-oauth/google', () => ({
+  GoogleOAuthProvider: ({ children }) => children,
+  GoogleLogin: ({ onSuccess, onError, render }) => {
+    const mockClick = () => {
+      onSuccess({ credential: 'mock-credential' });
+    };
+    return render({ onClick: mockClick });
+  },
+}));
+
+describe('Google Authentication', () => {
+  test('handles successful Google sign-in', async () => {
+    render(<SignIn />);
+    
+    const googleButton = screen.getByTestId('google-signin');
+    await userEvent.click(googleButton);
+    
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    });
+  });
+
+  test('displays error message on authentication failure', async () => {
+    // Override the mock for this test
+    jest.mocked(GoogleLogin).mockImplementationOnce(({ onError, render }) => {
+      const mockClick = () => {
+        onError();
+      };
+      return render({ onClick: mockClick });
+    });
+
+    render(<SignIn />);
+    
+    const googleButton = screen.getByTestId('google-signin');
+    await userEvent.click(googleButton);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-error')).toBeInTheDocument();
+      expect(screen.getByTestId('auth-error')).toHaveTextContent(/failed/i);
+    });
+  });
+});
